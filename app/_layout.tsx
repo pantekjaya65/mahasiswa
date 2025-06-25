@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import {
   BottomTabNavigationEventMap,
@@ -16,12 +16,19 @@ import {
   Text,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// Ganti ini dengan komponen masing-masing
+// Screens
 import HomeScreen from "../components/HomeScreen";
-import PendaftaranScreen from "../components/PendaftaranScreen";
+import FavoritScreen from "../components/FavoritScreen";
+import KategoriScreen from "../components/AddKategoriScreen";
 import ProfileScreen from "../components/ProfileScreen";
+import DetailScreen from "../components/DetailScreen";
+import LoginScreen from "../components/LoginScreen";
+import RegisterScreen from "../components/RegisterScreen";
+import ManajemenUserScreen from "../components/ManajemenUserScreen";
 
 const { width } = Dimensions.get("window");
 
@@ -29,7 +36,11 @@ const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator<RootStackParamList>();
 
 type RootStackParamList = {
+  Login: undefined;
+  Register: undefined;
   MainTabs: undefined;
+  DetailScreen: { kisah: any };
+  FavoritScreen: undefined;
 };
 
 type CustomTabBarProps = {
@@ -75,10 +86,14 @@ const CustomTabBar: React.FC<CustomTabBarProps> = ({
             switch (route.name) {
               case "Home":
                 return "home";
-              case "Pendaftaran":
-                return "create";
+              case "Favorit":
+                return "heart";
+              case "Kategori":
+                return "albums";
               case "Profile":
                 return "person";
+              case "ManajemenUser":
+                return "people";
               default:
                 return "ellipse-outline";
             }
@@ -111,6 +126,34 @@ const CustomTabBar: React.FC<CustomTabBarProps> = ({
 };
 
 const TabNavigator: React.FC = () => {
+  const [role, setRole] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadUserRole = async () => {
+      try {
+        const jsonValue = await AsyncStorage.getItem("user");
+        if (jsonValue) {
+          const user = JSON.parse(jsonValue);
+          setRole(user.role);
+        }
+      } catch (error) {
+        console.error("Gagal mendapatkan role:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadUserRole();
+  }, []);
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#003366" />
+      </View>
+    );
+  }
+
   return (
     <Tab.Navigator
       tabBar={(props) => <CustomTabBar {...props} />}
@@ -122,13 +165,27 @@ const TabNavigator: React.FC = () => {
         options={{ tabBarLabel: "Beranda", title: "Beranda" }}
       />
       <Tab.Screen
-        name="Pendaftaran"
-        component={PendaftaranScreen} // Ganti dengan <PendaftaranScreen />
-        options={{ tabBarLabel: "Pendaftaran", title: "Pendaftaran" }}
+        name="Favorit"
+        component={FavoritScreen}
+        options={{ tabBarLabel: "Favorit", title: "Favorit" }}
       />
+      {role !== "user" && (
+        <Tab.Screen
+          name="Kategori"
+          component={KategoriScreen}
+          options={{ tabBarLabel: "Kategori", title: "Kategori" }}
+        />
+      )}
+      {role !== "user" && (
+        <Tab.Screen
+          name="ManajemenUser"
+          component={ManajemenUserScreen}
+          options={{ tabBarLabel: "Kelola User", title: "Manajemen User" }}
+        />
+      )}
       <Tab.Screen
         name="Profile"
-        component={ProfileScreen} // Ganti dengan <ProfileScreen />
+        component={ProfileScreen}
         options={{ tabBarLabel: "Profil", title: "Profil" }}
       />
     </Tab.Navigator>
@@ -138,12 +195,16 @@ const TabNavigator: React.FC = () => {
 const Layout: React.FC = () => {
   return (
     <Stack.Navigator
-      initialRouteName="MainTabs"
+      initialRouteName="Login"
       screenOptions={{
         headerShown: false,
       }}
     >
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="Register" component={RegisterScreen} />
       <Stack.Screen name="MainTabs" component={TabNavigator} />
+      <Stack.Screen name="DetailScreen" component={DetailScreen} />
+      <Stack.Screen name="FavoritScreen" component={FavoritScreen} />
     </Stack.Navigator>
   );
 };
@@ -153,17 +214,10 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     width: "100%",
     paddingBottom: 8,
-
-    // SHADOW for iOS
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: -3,
-    },
+    shadowOffset: { width: 0, height: -3 },
     shadowOpacity: 0.1,
     shadowRadius: 6,
-
-    // SHADOW for Android
     elevation: 10,
   },
   navBar: {
@@ -193,6 +247,5 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 });
-
 
 export default Layout;

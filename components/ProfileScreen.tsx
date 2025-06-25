@@ -1,24 +1,61 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, Platform, TouchableOpacity, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  Platform,
+  TouchableOpacity,
+  Alert,
+} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import LottieView from 'lottie-react-native';
 
-export default function ProfileScreen() {
+export default function ProfileScreen({ navigation }: any) {
+  const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulasi loading
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 2000); // 2 detik
+    const loadUser = async () => {
+      try {
+        const jsonValue = await AsyncStorage.getItem('user');
+        if (jsonValue) {
+          const parsed = JSON.parse(jsonValue);
+          setUser(parsed);
+        }
+      } catch (error) {
+        console.error('Gagal memuat user:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    return () => clearTimeout(timer);
+    loadUser();
   }, []);
+
+  const handleLogout = async () => {
+    Alert.alert('Konfirmasi', 'Yakin ingin logout?', [
+      { text: 'Batal', style: 'cancel' },
+      {
+        text: 'Logout',
+        onPress: async () => {
+          await AsyncStorage.removeItem('user');
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'Login' }],
+          });
+        },
+      },
+    ]);
+  };
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
         <LottieView
-          source={{ uri: 'https://lottie.host/79017a82-0287-42ff-a051-2bacbaac099d/o8k596u5Eu.json' }} // ganti dengan link Lottie animasi kamu
+          source={{
+            uri: 'https://lottie.host/79017a82-0287-42ff-a051-2bacbaac099d/o8k596u5Eu.json',
+          }}
           autoPlay
           loop
           style={{ width: 200, height: 200 }}
@@ -28,32 +65,39 @@ export default function ProfileScreen() {
     );
   }
 
+  if (!user) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={{ color: '#555' }}>Tidak ada data pengguna</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.card}>
         <Image
           source={{
-            uri: 'https://img.freepik.com/free-vector/woman-floral-traditional-costume_1308-176159.jpg?semt=ais_hybrid&w=740',
+            uri:
+              user.avatarUrl ||
+              'https://img.freepik.com/free-vector/woman-floral-traditional-costume_1308-176159.jpg?semt=ais_hybrid&w=740',
           }}
           style={styles.avatar}
         />
-        <Text style={styles.name}>Atika</Text>
+        <Text style={styles.name}>{user.username}</Text>
         <Text style={styles.label}>Email</Text>
-        <Text style={styles.text}>atika@gmail.com</Text>
+        <Text style={styles.text}>{user.email}</Text>
 
-        <Text style={styles.label}>No. Handphone</Text>
-        <Text style={styles.text}>+6281234567890</Text>
+        <Text style={styles.label}>Role</Text>
+        <Text style={styles.text}>{user.role}</Text>
 
-        <Text style={styles.label}>Alamat</Text>
-        <Text style={styles.text}>Jl. Merdeka No. 10, Bandung</Text>
-
-        <Text style={styles.label}>Bio</Text>
-        <Text style={styles.bio}>
-          Mahasiswa Teknik Informatika di Universitas ABC. Suka ngoding dan belajar hal baru.
+        <Text style={styles.label}>Bergabung</Text>
+        <Text style={styles.text}>
+          {new Date(user.created_at?.seconds * 1000).toLocaleDateString()}
         </Text>
 
-        <TouchableOpacity style={styles.button}>
-          <Text style={styles.buttonText}>✏️ Edit Profil</Text>
+        <TouchableOpacity style={styles.button} onPress={handleLogout}>
+          <Text style={styles.buttonText}>🔒 Logout</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -118,16 +162,9 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     marginBottom: 4,
   },
-  bio: {
-    fontSize: 14,
-    color: '#444',
-    textAlign: 'center',
-    marginTop: 8,
-    lineHeight: 20,
-  },
   button: {
     marginTop: 20,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#FF3B30',
     paddingVertical: 12,
     paddingHorizontal: 30,
     borderRadius: 25,

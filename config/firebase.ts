@@ -3,13 +3,13 @@ import { getStorage } from 'firebase/storage';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDXNKjxyYpvsEVz1sk2vy4bs7hkzfQAh1Q",
-  authDomain: "testing-c46b8.firebaseapp.com",
-  projectId: "testing-c46b8",
-  storageBucket: "testing-c46b8.firebasestorage.app",
-  messagingSenderId: "830611207034",
-  appId: "1:830611207034:web:91395e8e7cd43070c85cc3",
-  measurementId: "G-ZP2NF34QNZ"
+  apiKey: "AIzaSyAjy2oolM8x5eQp0iQ84cwrTddKsryPKEA",
+  authDomain: "kisah-caa77.firebaseapp.com",
+  projectId: "kisah-caa77",
+  storageBucket: "kisah-caa77.firebasestorage.app",
+  messagingSenderId: "726398034876",
+  appId: "1:726398034876:web:f1c73d073f6a96f49381b9",
+  measurementId: "G-1QKLNPFWSS"
 };
 
 // Cegah inisialisasi ganda
